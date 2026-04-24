@@ -45,17 +45,38 @@ Apply this routing for every task:
 - Explicitly state detected stack signals (Vue/React/TypeScript) and the matched skills.
 - If suitable third-party components/libraries exist, prefer using them to implement features instead of hand-writing everything from scratch.
 - Keep behavior and copy aligned via shared config/constants when practical.
+- When updating an existing feature, do not assume backward compatibility with the previous feature implementation unless the user explicitly asks for it. If compatibility expectations are unclear, ask before preserving or re-implementing old behavior.
 - Prefer simple, testable interfaces and avoid unnecessary compatibility layers.
+- Do not add keyboard focus outlines, tab-focus rings, or focus halo styles unless the user explicitly asks for them.
 - Do not expose secrets/tokens in output.
 - Do not expose local absolute paths unless explicitly requested.
 
-## 5) Quality Gate (Before Merge/Ship)
+## 5) Frontend Baseline
+
+- For React UI work, prefer `shadcn/ui` when it fits the stack and install the standard base components early.
+- Include the common shadcn primitives up front when the UI needs them, instead of adding them one by one later.
+- Use `DropdownMenu` for language switching.
+- Use `DropdownMenu` for theme switching.
+- Theme state must be configuration-driven and support `light`, `dark`, and `system`.
+
+## 6) Quality Gate (Before Merge/Ship)
 
 - Build must pass (`pnpm build` unless the project uses another build command).
 - UI changes must be verified at both narrow and wide viewports.
 - No obvious duplicate code paths or redundant props introduced.
 
-## 6) Release/Deploy Runbook
+## 7) Backend Repo Conventions
+
+- If the task is in a backend-only repository, keep changes isolated to that repo and do not touch sibling frontend workspaces.
+- When a repo uses Supabase migrations, treat `supabase/migrations/` as the only source of truth for schema history.
+- Every schema change must be accompanied by:
+  - a new migration file
+  - a log entry in the repository migration record
+- Never rewrite or delete an applied migration unless the user explicitly asks for a destructive history change.
+- Keep route handlers thin and push database access into dedicated service/repository modules.
+- Start with the smallest runnable Worker or API shape before adding auth, schema, or integration layers.
+
+## 8) Release/Deploy Runbook
 
 When asked to release/deploy/ship:
 
@@ -79,7 +100,7 @@ When asked to release/deploy/ship:
 7. Report:
    - Return commit SHA and tag in the final response.
 
-## 7) New Project Bootstrap (Mandatory Check)
+## 9) New Project Bootstrap (Mandatory Check)
 
 For every new project session/repo:
 
@@ -89,3 +110,12 @@ For every new project session/repo:
   - do not create or modify project-level agent rules.
   - continue work with global rules only.
 - This check is mandatory and cannot be skipped.
+
+## 10) Browser MCP Local Debug Tabs
+
+- For local debug pages, reuse a single existing local tab instead of opening duplicates.
+- Before opening a local debug URL, run `list_pages` and match an existing tab by exact URL or by local origin (`localhost`, `127.0.0.1`, or `::1`).
+- If a matching tab exists, use `select_page` on that tab instead of `new_page`.
+- If multiple matching local debug tabs exist, keep one relevant tab and close redundant duplicates with `close_page`.
+- Only call `new_page` for a local debug URL when no matching local tab exists.
+- If the desired path must change but no navigation tool is available, keep the final browser state to one matching local debug tab by closing duplicates after opening the target URL.
